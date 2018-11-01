@@ -13,6 +13,10 @@ namespace Sales.Common.Models
         public Decimal Price { get; set; }
         public bool IsAvailable { get; set; }
         public DateTime PublisOn { get; set; }
+        public override string ToString()
+        {
+            return this.Description;
+        }
 
     }
 }
