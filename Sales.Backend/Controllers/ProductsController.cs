@@ -1,17 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Data.Entity;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Net;
-using System.Web;
-using System.Web.Mvc;
-using Sales.Backend.Models;
-using Sales.Common.Models;
+﻿
 
 namespace Sales.Backend.Controllers
 {
+    using System;
+    using System.Data.Entity;
+    using System.Linq;
+    using System.Net;
+    using System.Threading.Tasks;
+    using System.Web.Mvc;
+    using Backend.Models;
+    using Common.Models;
+    using Sales.Backend.Helpers;
+
     public class ProductsController : Controller
     {
         private LocalDataContext db = new LocalDataContext();
@@ -19,7 +19,7 @@ namespace Sales.Backend.Controllers
         // GET: Products
         public async Task<ActionResult> Index()
         {
-            return View(await db.Products.ToListAsync());
+            return View(await this.db.Products.OrderBy(p=>p.Description).ToListAsync());
         }
 
         // GET: Products/Details/5
@@ -29,35 +29,54 @@ namespace Sales.Backend.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            Products products = await db.Products.FindAsync(id);
+            Products products = await this.db.Products.FindAsync(id);
             if (products == null)
             {
                 return HttpNotFound();
             }
             return View(products);
         }
-
-        // GET: Products/Create
+       
         public ActionResult Create()
         {
             return View();
         }
-
-        // POST: Products/Create
-        // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
-        // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
+         
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> Create([Bind(Include = "ProductId,Description,Price,IsAvailable,PublisOn")] Products products)
+        public async Task<ActionResult> Create(ProductView view)
         {
             if (ModelState.IsValid)
             {
-                db.Products.Add(products);
-                await db.SaveChangesAsync();
+                var pic = string.Empty;
+                var folder = "~/Content/Products";
+                if (view.ImageFile!=null)
+                {
+                    pic = FileHelper.UploadPhoto(view.ImageFile, folder);
+                    pic = $"{folder}/{pic}";
+                }
+                var product = this.ToProduct(view,pic);
+
+                this.db.Products.Add(product);
+                await this.db.SaveChangesAsync();
                 return RedirectToAction("Index");
             }
 
-            return View(products);
+            return View(view);
+        }
+
+        private Products ToProduct(ProductView view,string pic)
+        {
+            return new Products
+            {
+                Description = view.Description,
+                ImagePath = pic,
+                IsAvailable = view.IsAvailable,
+                Price = view.Price,
+                ProductId = view.ProductId,
+                PublisOn = view.PublisOn,
+                Remarks = view.Remarks
+            };
         }
 
         // GET: Products/Edit/5
@@ -67,28 +86,49 @@ namespace Sales.Backend.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            Products products = await db.Products.FindAsync(id);
+            var  products = await this.db.Products.FindAsync(id);
             if (products == null)
             {
                 return HttpNotFound();
             }
-            return View(products);
+            var view = this.ToView(products);
+            return View(view);
         }
 
-        // POST: Products/Edit/5
-        // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
-        // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
+        private ProductView ToView(Products products)
+        {
+            return new ProductView
+            {
+                Description = products.Description,
+                ImagePath = products.ImagePath,
+                IsAvailable = products.IsAvailable,
+                Price = products.Price,
+                ProductId = products.ProductId,
+                PublisOn = products.PublisOn,
+                Remarks = products.Remarks
+            };
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> Edit([Bind(Include = "ProductId,Description,Price,IsAvailable,PublisOn")] Products products)
+        public async Task<ActionResult> Edit(ProductView view)
         {
             if (ModelState.IsValid)
             {
-                db.Entry(products).State = EntityState.Modified;
-                await db.SaveChangesAsync();
+                var pic = view.ImagePath;
+                var folder = "~/Content/Products";
+                if (view.ImageFile != null)
+                {
+                    pic = FileHelper.UploadPhoto(view.ImageFile, folder);
+                    pic = $"{folder}/{pic}";
+                }
+                var product = this.ToProduct(view, pic);
+
+                this.db.Entry(product).State = EntityState.Modified;
+                await this.db.SaveChangesAsync();
                 return RedirectToAction("Index");
             }
-            return View(products);
+            return View(view);
         }
 
         // GET: Products/Delete/5
@@ -98,7 +138,7 @@ namespace Sales.Backend.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            Products products = await db.Products.FindAsync(id);
+            var products = await this.db.Products.FindAsync(id);
             if (products == null)
             {
                 return HttpNotFound();
@@ -111,9 +151,9 @@ namespace Sales.Backend.Controllers
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> DeleteConfirmed(int id)
         {
-            Products products = await db.Products.FindAsync(id);
-            db.Products.Remove(products);
-            await db.SaveChangesAsync();
+            Products products = await this.db.Products.FindAsync(id);
+            this.db.Products.Remove(products);
+            await this.db.SaveChangesAsync();
             return RedirectToAction("Index");
         }
 
@@ -121,7 +161,7 @@ namespace Sales.Backend.Controllers
         {
             if (disposing)
             {
-                db.Dispose();
+                this.db.Dispose();
             }
             base.Dispose(disposing);
         }

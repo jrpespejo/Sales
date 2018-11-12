@@ -5,6 +5,9 @@
              x:Class="Sales.Views.ProductsPage"
              BindingContext="{Binding Main,Source={StaticResource Locator}}"
              Title="{i18n:Translate Products}">
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Icon="ic_action_add_circle" Command="{Binding AddProductCommand}"/>
+    </ContentPage.ToolbarItems>
     <ContentPage.Content>
         <StackLayout
             BindingContext="{Binding Products}"
@@ -18,25 +21,49 @@
                 <ListView.ItemTemplate>
                     <DataTemplate>
                         <ViewCell>
+                            <ViewCell.ContextActions>
+                                <MenuItem Text="{i18n:Translate Edit}" Command="{Binding EditProductCommand}" />
+                                <MenuItem Text="{i18n:Translate Delete}" Command="{Binding DeleteProductCommand}" IsDestructive="True" />
+                            </ViewCell.ContextActions>
                             <Grid>
+                                <Grid.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding EditProductCommand}"/>
+                                </Grid.GestureRecognizers>
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="2*"/>
+                                    <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-                                <Label
-                                    FontAttributes="Bold"
-                                    TextColor="Black"
-                                    Grid.Column="0"
-                                    Text="{Binding Description}">
+                                <Image 
+                                    Grid.Column="0"                                    
+                                    Source="{Binding ImageFullPath}"
+                                    WidthRequest="100">
                                     
-                                </Label>
+                                </Image>
+                                <StackLayout Grid.Column="1"
+                                             VerticalOptions="Center">
+                                    <Label
+                                        FontAttributes="Bold"                                    
+                                        Text="{Binding Description}">
+                                    </Label>
+                                    <Label                                    
+                                        Text="{Binding Remarks}">
+                                    </Label>
+                                </StackLayout>
                                 <Label
                                    HorizontalOptions="End"
                                     TextColor="Black"
-                                    Grid.Column="1"
-                                    Text="{Binding Price,StringFormat='{0:C2}'}">
+                                    Grid.Column="2"
+                                    Text="{Binding Price,StringFormat='{0:C2}'}"
+                                    VerticalOptions="Center">
 
                                 </Label>
+                                <Image
+                                    Grid.Column="3"
+                                    Source="ic_chevron_right"
+                                    VerticalOptions="Center">
+                                </Image>
                             </Grid>
                         </ViewCell>
                     </DataTemplate>

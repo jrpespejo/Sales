@@ -1,19 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Data.Entity;
-using System.Data.Entity.Infrastructure;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Threading.Tasks;
-using System.Web.Http;
-using System.Web.Http.Description;
-using Sales.Common.Models;
-using Sales.Domain.Models;
-
+﻿
 namespace Sales.API.Controllers
 {
+    using System;
+    using System.Data.Entity;
+    using System.Data.Entity.Infrastructure;
+    using System.IO;
+    using System.Linq;
+    using System.Net;
+    using System.Threading.Tasks;
+    using System.Web.Http;
+    using System.Web.Http.Description;
+    using Common.Models;
+    using Domain.Models;
+
     public class ProductsController : ApiController
     {
         private DataContext db = new DataContext();
@@ -21,14 +20,14 @@ namespace Sales.API.Controllers
         // GET: api/Products
         public IQueryable<Products> GetProducts()
         {
-            return db.Products;
+            return this.db.Products.OrderBy(p=>p.Description);
         }
 
         // GET: api/Products/5
         [ResponseType(typeof(Products))]
         public async Task<IHttpActionResult> GetProducts(int id)
         {
-            Products products = await db.Products.FindAsync(id);
+            var products = await this.db.Products.FindAsync(id);
             if (products == null)
             {
                 return NotFound();
@@ -50,12 +49,25 @@ namespace Sales.API.Controllers
             {
                 return BadRequest();
             }
+            if (products.ImageArray != null && products.ImageArray.Length > 0)
+            {
+                var stream = new MemoryStream(products.ImageArray);
+                var guid = Guid.NewGuid().ToString();
+                var file = $"{guid}.jpg";
+                var folder = "~/Content/Products";
+                var fullPath = $"{folder}/{file}";
+                var response = FilesHelper.UploadPhoto(stream, folder, file);
 
-            db.Entry(products).State = EntityState.Modified;
+                if (response)
+                {
+                    products.ImagePath = fullPath;
+                }
+            }
+            this.db.Entry(products).State = EntityState.Modified;
 
             try
             {
-                await db.SaveChangesAsync();
+                await this.db.SaveChangesAsync();
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -69,36 +81,55 @@ namespace Sales.API.Controllers
                 }
             }
 
-            return StatusCode(HttpStatusCode.NoContent);
+            return Ok(products);
         }
 
         // POST: api/Products
         [ResponseType(typeof(Products))]
         public async Task<IHttpActionResult> PostProducts(Products products)
         {
+            products.IsAvailable = true;
+            products.PublisOn = DateTime.Now.ToUniversalTime();
+
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
+            if (products.ImageArray != null && products.ImageArray.Length > 0)
+            {
+                var stream = new MemoryStream(products.ImageArray);
+                var guid = Guid.NewGuid().ToString();
+                var file = $"{guid}.jpg";
+                var folder = "~/Content/Products";
+                var fullPath = $"{folder}/{file}";
+                var response = FilesHelper.UploadPhoto(stream, folder, file);
 
-            db.Products.Add(products);
-            await db.SaveChangesAsync();
+                if (response)
+                {
+                    products.ImagePath = fullPath;
+                }
+            }
+
+
+            this.db.Products.Add(products);
+            await this.db.SaveChangesAsync();
 
             return CreatedAtRoute("DefaultApi", new { id = products.ProductId }, products);
         }
+    
 
         // DELETE: api/Products/5
         [ResponseType(typeof(Products))]
         public async Task<IHttpActionResult> DeleteProducts(int id)
         {
-            Products products = await db.Products.FindAsync(id);
+            Products products = await this.db.Products.FindAsync(id);
             if (products == null)
             {
                 return NotFound();
             }
 
-            db.Products.Remove(products);
-            await db.SaveChangesAsync();
+            this.db.Products.Remove(products);
+            await this.db.SaveChangesAsync();
 
             return Ok(products);
         }
@@ -107,14 +138,14 @@ namespace Sales.API.Controllers
         {
             if (disposing)
             {
-                db.Dispose();
+                this.db.Dispose();
             }
             base.Dispose(disposing);
         }
 
         private bool ProductsExists(int id)
         {
-            return db.Products.Count(e => e.ProductId == id) > 0;
+            return this.db.Products.Count(e => e.ProductId == id) > 0;
         }
     }
 }
