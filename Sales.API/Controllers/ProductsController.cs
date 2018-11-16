@@ -13,6 +13,7 @@ namespace Sales.API.Controllers
     using Common.Models;
     using Domain.Models;
 
+    [Authorize]
     public class ProductsController : ApiController
     {
         private DataContext db = new DataContext();
