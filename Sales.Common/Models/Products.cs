@@ -1,6 +1,7 @@
 ﻿
 namespace Sales.Common.Models
 {
+    using Newtonsoft.Json;
     using System;
     using System.ComponentModel.DataAnnotations;
     using System.ComponentModel.DataAnnotations.Schema;
@@ -9,6 +10,8 @@ namespace Sales.Common.Models
     {
         [Key]
         public int ProductId { get; set; }
+
+        public int CategoryId { get; set; }
 
         [Required]
         [StringLength(50)]       
@@ -31,9 +34,16 @@ namespace Sales.Common.Models
         [DataType(DataType.Date)]
         public DateTime PublisOn { get; set; }
 
+        [JsonIgnore]
+        public virtual Category Category { get; set; }
+
         [NotMapped]
         public byte[] ImageArray { get; set; }
 
+        [Required]
+        [StringLength(128)]
+        public string UserId { get; set; }
+         
         public string ImageFullPath
         {
             get
@@ -42,7 +52,8 @@ namespace Sales.Common.Models
                 {
                     return "noproduct";
                 }
-                return $"https://salesapi1.azurewebsites.net/{this.ImagePath.Substring(1)}";
+                //return $"https://salesapi1.azurewebsites.net/{this.ImagePath.Substring(1)}";
+                return $"http://www.xquinde.somee.com/{this.ImagePath.Substring(1)}";
             }
         }
         public override string ToString()

@@ -29,6 +29,7 @@ namespace Sales.ViewModels
         #endregion
 
         #region Properties
+        public Category Category { get; set; }
         public string Filter
         {
             get { return this.filter; }
@@ -58,52 +59,89 @@ namespace Sales.ViewModels
         #endregion
 
         #region Constructions
-        public ProductsViewModel()
+     
+        public ProductsViewModel(Category category)
         {
             instance = this;
+            this.Category = category;
             this.apiService = new ApiService();
             this.dataService = new DataService();
             this.LoadProducts();
+            
         }
         #endregion
         #region Singleton
         private static ProductsViewModel instance;
+        
+
         public static ProductsViewModel Getinstance()
         {
-            if (instance==null)
-            {
-                return new ProductsViewModel();
-            }
+         
             return instance;
         }
         #endregion
 
         #region Methods
+        //private async void LoadProducts()
+        //{
+        //    this.IsRefreshing = true;
+        //    var conection = await this.apiService.CheckConnection();           
+        //    if (conection.IsSuccess)
+        //    {
+        //        var answer = await this.LoadProductsFromAPI();
+        //        if (answer)
+        //        {
+        //            this.SaveProductsToDB();
+        //        }
+        //    }
+        //    else
+        //    {
+        //        await this.LoadProductsFomDB();
+        //    }
+        //    if (this.MyProducts==null || this.MyProducts.Count==0)
+        //    {
+        //        this.IsRefreshing = false;
+        //        await Application.Current.MainPage.DisplayAlert(Languages.Error, Languages.NoProductsMessage, Languages.Accept);
+        //        return;
+        //    }
+
+        //    this.RefreshList();
+        //    this.IsRefreshing = false;
+        //}
         private async void LoadProducts()
         {
             this.IsRefreshing = true;
-            var conection = await this.apiService.CheckConnection();           
-            if (conection.IsSuccess)
-            {
-                var answer = await this.LoadProductsFromAPI();
-                if (answer)
-                {
-                    this.SaveProductsToDB();
-                }
-            }
-            else
-            {
-                await this.LoadProductsFomDB();
-            }
-            if (this.MyProducts==null || this.MyProducts.Count==0)
+
+            var connection = await this.apiService.CheckConnection();
+            if (!connection.IsSuccess)
             {
                 this.IsRefreshing = false;
-                await Application.Current.MainPage.DisplayAlert(Languages.Error, Languages.NoProductsMessage, Languages.Accept);
+                await Application.Current.MainPage.DisplayAlert(Languages.Error, connection.Message, Languages.Accept);
                 return;
             }
-                                 
-            this.RefreshList();
+
+            var answer = await this.LoadProductsFromAPI();
+            if (answer)
+            {
+                this.RefreshList();
+            }
+
             this.IsRefreshing = false;
+        }
+
+        private async Task<bool> LoadProductsFromAPI()
+        {
+            var url = Application.Current.Resources["UrlAPI"].ToString();
+            var prefix = Application.Current.Resources["UrlPrefix"].ToString();
+            var controller = Application.Current.Resources["UrlProductsController"].ToString();
+            var response = await this.apiService.GetList<Products>(url, prefix, controller, this.Category.CategoryId, Settings.TokenType, Settings.AccesToken);
+            if (!response.IsSuccess)
+            {
+                return false;
+            }
+
+            this.MyProducts = (List<Products>)response.Result;
+            return true;
         }
 
         private async Task LoadProductsFomDB()
@@ -117,20 +155,20 @@ namespace Sales.ViewModels
             this.dataService.Insert(this.MyProducts);
         }
 
-        private async Task<bool> LoadProductsFromAPI()
-        {
-            var url = Application.Current.Resources["UrlAPI"].ToString();
-            var prefix = Application.Current.Resources["UrlPrefix"].ToString();
-            var controller = Application.Current.Resources["UrlProductsController"].ToString();
+        //private async Task<bool> LoadProductsFromAPI()
+        //{
+        //    var url = Application.Current.Resources["UrlAPI"].ToString();
+        //    var prefix = Application.Current.Resources["UrlPrefix"].ToString();
+        //    var controller = Application.Current.Resources["UrlProductsController"].ToString();
 
-            var response = await this.apiService.GetList<Products>(url, prefix, controller, Settings.TokenType, Settings.AccesToken);
-            if (!response.IsSuccess)
-            {
-                return false;
-            }
-            this.MyProducts = (List<Products>)response.Result;
-            return true;
-        }
+        //    var response = await this.apiService.GetList<Products>(url, prefix, controller, Settings.TokenType, Settings.AccesToken);
+        //    if (!response.IsSuccess)
+        //    {
+        //        return false;
+        //    }
+        //    this.MyProducts = (List<Products>)response.Result;
+        //    return true;
+        //}
 
         public void RefreshList()
         {

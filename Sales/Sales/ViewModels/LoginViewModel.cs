@@ -124,7 +124,7 @@ namespace Sales.ViewModels
             }
 
 
-            MainViewModel.Getinstance().Products = new ProductsViewModel();
+            MainViewModel.Getinstance().Categories = new CategoriesViewModel();
             //Application.Current.MainPage = new ProductsPage();
             Application.Current.MainPage = new MasterPage();
             this.IsRunning = false;

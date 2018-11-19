@@ -28,11 +28,11 @@ namespace Sales.API.Controllers
         [ResponseType(typeof(Products))]
         public async Task<IHttpActionResult> GetProducts(int id)
         {
-            var products = await this.db.Products.FindAsync(id);
-            if (products == null)
-            {
-                return NotFound();
-            }
+            var products = await this.db.Products.Where(p=>p.CategoryId==id).ToListAsync();
+            //if (products == null)
+            //{
+            //    return NotFound();
+            //}
 
             return Ok(products);
         }

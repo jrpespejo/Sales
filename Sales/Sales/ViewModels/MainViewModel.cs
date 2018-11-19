@@ -15,6 +15,7 @@ namespace Sales.ViewModels
     {
         #region Properties
         public ObservableCollection<MenuItemViewModel> Menu { get; set; }
+        public CategoriesViewModel Categories { get; set; }
         public LoginViewModel Login { get; set; }
         public EditProductViewModel EditProduct { get; set; }
         public ProductsViewModel Products { get; set; }

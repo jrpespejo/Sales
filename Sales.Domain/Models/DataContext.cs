@@ -9,5 +9,7 @@
         }
 
         public DbSet<Common.Models.Products> Products { get; set; }
+
+        public DbSet<Common.Models.Category> Categories { get; set; }
     }
 }
