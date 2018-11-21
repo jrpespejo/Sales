@@ -183,7 +183,10 @@ namespace Sales.ViewModels
                     Price = p.Price,
                     ProductId = p.ProductId,
                     PublisOn = p.PublisOn,
-                    Remarks = p.Remarks
+                    Remarks = p.Remarks,
+                    CategoryId = p.CategoryId,
+                    UserId = p.UserId,
+
 
                 });
 
@@ -202,7 +205,10 @@ namespace Sales.ViewModels
                     Price = p.Price,
                     ProductId = p.ProductId,
                     PublisOn = p.PublisOn,
-                    Remarks = p.Remarks
+                    Remarks = p.Remarks,
+                    CategoryId = p.CategoryId,
+                    UserId = p.UserId
+
 
                 }).Where(p=>p.Description.ToLower().Contains(this.Filter.ToLower())).ToList();
 
