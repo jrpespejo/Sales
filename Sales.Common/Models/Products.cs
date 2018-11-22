@@ -43,7 +43,11 @@ namespace Sales.Common.Models
         [Required]
         [StringLength(128)]
         public string UserId { get; set; }
-         
+
+        public double Latitude { get; set; }
+
+        public double Longitude { get; set; }
+
         public string ImageFullPath
         {
             get
